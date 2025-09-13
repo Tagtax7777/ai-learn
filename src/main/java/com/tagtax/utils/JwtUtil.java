@@ -17,12 +17,18 @@ public class JwtUtil {
     // Token过期时间（24小时）
     private static final long EXPIRATION_TIME = 24 * 60 * 60 * 1000;
 
-    public static String generateToken(Integer userId, String username, Integer permissionLevel, Integer departmentId) {
+    /**
+     * 生成JWT Token
+     * @param id 用户ID（对应数据库主键）
+     * @param username 用户名
+     * @param phone 手机号
+     * @return JWT Token
+     */
+    public static String generateToken(Long id, String username, String phone) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("userId", userId);
+        claims.put("id", id);
         claims.put("username", username);
-        claims.put("permissionLevel", permissionLevel);
-        claims.put("departmentId", departmentId);
+        claims.put("phone", phone);
 
         return Jwts.builder()
                 .setClaims(claims)
@@ -48,13 +54,13 @@ public class JwtUtil {
     }
 
     /**
-     * 从Token中获取用户ID
+     * 从Token中获取用户ID（对应数据库主键）
      * @param token JWT Token
      * @return 用户ID
      */
-    public static Integer getUserIdFromToken(String token) {
+    public static Long getIdFromToken(String token) {
         Claims claims = getClaimsFromToken(token);
-        return claims != null ? (Integer) claims.get("userId") : null;
+        return claims != null ? ((Number) claims.get("id")).longValue() : null;
     }
 
     /**
@@ -68,23 +74,13 @@ public class JwtUtil {
     }
 
     /**
-     * 从Token中获取权限级别
+     * 从Token中获取手机号
      * @param token JWT Token
-     * @return 权限级别
+     * @return 手机号
      */
-    public static Integer getPermissionLevelFromToken(String token) {
+    public static String getPhoneFromToken(String token) {
         Claims claims = getClaimsFromToken(token);
-        return claims != null ? (Integer) claims.get("permissionLevel") : null;
-    }
-
-    /**
-     * 从Token中获取部门ID
-     * @param token JWT Token
-     * @return 部门ID
-     */
-    public static Integer getDepartmentIdFromToken(String token) {
-        Claims claims = getClaimsFromToken(token);
-        return claims != null ? (Integer) claims.get("departmentId") : null;
+        return claims != null ? (String) claims.get("phone") : null;
     }
 
     /**

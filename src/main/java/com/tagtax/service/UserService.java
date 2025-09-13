@@ -1,4 +1,8 @@
 package com.tagtax.service;
 
-public class UserService {
+import com.tagtax.entity.Result;
+
+public interface UserService{
+
+    Result checkSms(String phone, String sms);
 }

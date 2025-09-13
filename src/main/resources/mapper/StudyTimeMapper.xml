@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tagtax.mapper.StudyTimeMapper" >
+
+    <select id="getStudyTimeByUserId" resultType="com.tagtax.entity.UserStudyTime">
+        select * from user_study_time where user_id = #{userId};
+    </select>
+
+    <update id="updateTotalHoursByUserId">
+        update user_study_time set total_hours = #{hours} where user_id = #{userId}
+    </update>
+
+    <update id="updateDailyHoursByUserId">
+        update user_study_time set daily_hours = #{hours} where user_id = #{userId}
+    </update>
+
+    <update id="resetExpiredDailyTime">
+        update user_study_time set daily_hours = 0
+    </update>
+
+    <insert id="createUserStudyTime">
+        insert into user_study_time(user_id, total_hours, daily_hours)
+        value (#{userId}, 0.00, 0.00)
+    </insert>
+
+    <select id="getDailyHoursTop10" resultType="com.tagtax.entity.UserStudyTime">
+        select * from user_study_time order by daily_hours desc limit 10
+    </select>
+
+    <select id="getTotalHoursTop10" resultType="com.tagtax.entity.UserStudyTime">
+        select * from user_study_time order by total_hours desc limit 10
+    </select>
+
+    <select id="getPointTop10" resultType="com.tagtax.entity.UserStudyTime">
+        select * from user_study_time order by points desc limit 10
+    </select>
+
+    <update id="updatePointsByUserId">
+        update user_study_time set points = #{points} where user_id = #{userId}
+    </update>
+</mapper>

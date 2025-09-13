@@ -4,3 +4,20 @@ spring:
     url: jdbc:mysql://localhost:3306/ai-learn
     username: root
     password: 123456
+  ai:
+    zhipuai:
+      api-key: e70cac202b0143be942df67116ce5f39.Biunqt9Yiel4RxHN
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+server:
+  port: 8080
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    map-underscore-to-camel-case: true
+

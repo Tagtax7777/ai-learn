@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tagtax.mapper.GoalsMapper" >
+
+
+    <insert id="addGoals" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO learning_goals
+        (user_id, title, goal_type, end_date, start_date, status, estimated_hours, actual_hours)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.userId}, #{item.title}, #{item.goalType}, #{item.endDate},
+            #{item.startDate}, #{item.status}, #{item.estimatedHours}, #{item.actualHours})
+        </foreach>
+    </insert>
+
+    <insert id="addTasks" parameterType="java.util.List">
+        insert into goal_tasks
+        (goal_id, title, sort_order, estimated_hours, actual_hours, status)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.goalId}, #{item.title}, #{item.sortOrder},
+            #{item.estimatedHours}, #{item.actualHours}, #{item.status})
+        </foreach>
+    </insert>
+
+    <select id="getGoalsByUserId" resultType="com.tagtax.entity.LearningGoals">
+        select * from learning_goals where user_id = #{userId}
+    </select>
+
+    <select id="getTasksByGoalId" resultType="com.tagtax.entity.GoalTasks">
+        select * from goal_tasks where goal_id = #{goalId}
+    </select>
+
+    <select id="getGoalByGoalId" resultType="com.tagtax.entity.LearningGoals">
+        select * from learning_goals where id = #{goalId}
+    </select>
+
+    <select id="getTaskByTaskId" resultType="com.tagtax.entity.GoalTasks">
+        select * from goal_tasks where id = #{taskId}
+    </select>
+
+    <update id="updateGoalHours">
+        update learning_goals set actual_hours = #{hours} where id = #{goalId}
+    </update>
+
+    <update id="updateTaskHours">
+        update goal_tasks set actual_hours = #{hours} where id = #{taskId}
+    </update>
+
+    <update id="updateTaskEstimatedHours">
+        update goal_tasks set estimated_hours = #{hours} where id = #{taskId}
+    </update>
+
+    <update id="updateGoalStatusToFinish">
+        update learning_goals set status = 1 where id = #{goalId}
+    </update>
+
+    <update id="updateTaskStatusToFinish">
+        update goal_tasks set status = 1 where id = #{taskId}
+    </update>
+
+    <delete id="deleteGoalsByUserId">
+        delete from learning_goals where id = #{goalId}
+    </delete>
+
+    <update id="updateGoalEndDate">
+        update learning_goals set end_date = #{endDate} where id = #{goalId}
+    </update>
+
+    <select id="getFinishedGoals" resultType="java.lang.Integer">
+        select count(*) from learning_goals where user_id = #{userId} and status = 0;
+    </select>
+</mapper>

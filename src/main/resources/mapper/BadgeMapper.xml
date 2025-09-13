@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tagtax.mapper.BadgeMapper">
+
+    <!-- 查询所有徽章（按所需积分升序排列） -->
+    <select id="findAllBadges" resultType="com.tagtax.entity.Badge">
+        SELECT * FROM badges
+        ORDER BY required_points ASC
+    </select>
+
+    <!-- 查询用户已获得的徽章 -->
+    <select id="findUserBadges" resultType="com.tagtax.entity.Badge" parameterType="long">
+        SELECT b.*
+        FROM user_badges ub
+                 JOIN badges b ON ub.badge_id = b.id
+        WHERE ub.user_id = #{userId}
+    </select>
+
+    <!-- 查询用户尚未获得的徽章 -->
+    <select id="findUnearnedBadges" resultType="com.tagtax.entity.Badge" parameterType="long">
+        SELECT b.*
+        FROM badges b
+        WHERE b.id NOT IN (
+            SELECT ub.badge_id
+            FROM user_badges ub
+            WHERE ub.user_id = #{userId}
+        )
+    </select>
+
+    <!-- 为用户添加徽章 -->
+    <insert id="addUserBadge" parameterType="map">
+        INSERT IGNORE INTO user_badges(user_id, badge_id)
+        VALUES(#{userId}, #{badgeId})
+    </insert>
+
+    <!-- 查询用户徽章总数 -->
+    <select id="countUserBadges" resultType="int" parameterType="long">
+        SELECT COUNT(*)
+        FROM user_badges
+        WHERE user_id = #{userId}
+    </select>
+
+    <!-- 根据积分阈值查询徽章 -->
+    <select id="findByPointsThreshold" resultType="com.tagtax.entity.Badge" parameterType="int">
+        SELECT * FROM badges
+        WHERE required_points > 0 AND required_points &lt;= #{points}
+        ORDER BY required_points DESC
+    </select>
+
+    <!-- 检查用户是否已拥有某徽章 -->
+    <select id="exists" resultType="boolean">
+        SELECT CASE WHEN COUNT(*) > 0 THEN true ELSE false END
+        FROM user_badges
+        WHERE user_id = #{userId} AND badge_id = #{badgeId}
+    </select>
+
+</mapper>

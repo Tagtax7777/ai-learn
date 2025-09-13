@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tagtax.mapper.CheckInMapper" >
+
+    <insert id="addOneCheckIn">
+        insert into daily_checkins (user_id, checkin_date)
+            value (#{userId}, CURDATE())
+    </insert>
+
+    <select id="findOneYearCheckIn" resultType="java.time.LocalDate">
+        select daily_checkins.checkin_date from daily_checkins
+        where user_id = #{userId} and YEAR(checkin_date) = #{year}
+        order by checkin_date
+    </select>
+
+    <select id="findTodayCheckIn" resultType="java.lang.Integer">
+        select exists(select 1 from daily_checkins where user_id = #{userId} and checkin_date = CURDATE())
+        as is_checked
+    </select>
+
+    <select id="findLastCheckIn" resultType="java.time.LocalDate">
+        select checkin_streaks.last_checkin_date from checkin_streaks where user_id = #{userId}
+    </select>
+
+    <update id="updateStreak">
+        INSERT INTO checkin_streaks (user_id, current_streak, longest_streak, last_checkin_date)
+        VALUES (#{userId}, #{newStreak}, #{newStreak}, #{today})
+        ON DUPLICATE KEY UPDATE
+                             current_streak = #{newStreak},
+                             longest_streak = GREATEST(longest_streak, #{newStreak}),
+                             last_checkin_date = #{today}
+    </update>
+
+    <select id="getCurrentStreak" resultType="java.lang.Integer">
+        SELECT current_streak
+        FROM checkin_streaks
+        WHERE user_id = #{userId}
+    </select>
+</mapper>

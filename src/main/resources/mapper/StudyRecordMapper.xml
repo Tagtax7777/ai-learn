@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tagtax.mapper.StudyRecordMapper" >
+
+    <insert id="insert">
+        insert into study_records(user_id, start_time, end_time, study_date)
+            values (#{userId}, #{startTime}, #{endTime}, #{studyDate})
+    </insert>
+
+    <select id="getStudyRecord" resultType="com.tagtax.entity.StudyRecord">
+        select * from study_records where user_id = #{userId}
+    </select>
+</mapper>
