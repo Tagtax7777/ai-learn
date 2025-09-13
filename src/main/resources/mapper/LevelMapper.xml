@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tagtax.mapper.LevelMapper">
+
+    <!-- 获取所有启用的关卡 -->
+    <select id="getAllActiveLevels" resultType="com.tagtax.entity.Level">
+        SELECT * FROM levels 
+        WHERE is_active = 1 
+        ORDER BY level_number ASC
+    </select>
+    
+    <!-- 根据ID获取关卡信息 -->
+    <select id="getLevelById" resultType="com.tagtax.entity.Level">
+        SELECT * FROM levels WHERE id = #{levelId}
+    </select>
+    
+    <!-- 获取所有关卡 -->
+    <select id="getAllLevels" resultType="com.tagtax.entity.Level">
+        SELECT * FROM levels ORDER BY level_number ASC
+    </select>
+    
+    <!-- 保存用户关卡通关记录 -->
+    <insert id="saveUserLevelRecord" parameterType="com.tagtax.entity.UserLevelRecord" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user_level_records 
+        (user_id, level_id, stars_earned, score, total_questions, correct_answers, completion_time, quality_analysis, completed_at)
+        VALUES 
+        (#{userId}, #{levelId}, #{starsEarned}, #{score}, #{totalQuestions}, #{correctAnswers}, #{completionTime}, #{qualityAnalysis}, #{completedAt})
+    </insert>
+    
+    <!-- 获取用户关卡历史记录 -->
+    <select id="getUserLevelRecords" resultType="com.tagtax.entity.UserLevelRecord">
+        SELECT * FROM user_level_records 
+        WHERE user_id = #{userId} AND level_id = #{levelId}
+        ORDER BY completed_at DESC
+    </select>
+
+    <!-- 获取用户所有关卡历史记录 -->
+    <select id="getAllUserLevelRecords" resultType="com.tagtax.entity.UserLevelRecord">
+        SELECT * FROM user_level_records
+        WHERE user_id = #{userId}
+        ORDER BY completed_at DESC
+    </select>
+    
+    <!-- 获取用户最佳成绩 -->
+    <select id="getUserBestRecord" resultType="com.tagtax.entity.UserLevelRecord">
+        SELECT * FROM user_level_records 
+        WHERE user_id = #{userId} AND level_id = #{levelId}
+        ORDER BY stars_earned DESC, score DESC, completed_at ASC
+        LIMIT 1
+    </select>
+    
+    <!-- 添加新关卡 -->
+    <insert id="addLevel" parameterType="com.tagtax.entity.Level" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO levels 
+        (level_name, level_number, description, required_goals, unlock_condition, max_stars, is_active, created_at)
+        VALUES 
+        (#{levelName}, #{levelNumber}, #{description}, #{requiredGoals}, #{unlockCondition}, #{maxStars}, #{isActive}, #{createdAt})
+    </insert>
+    
+    <!-- 更新关卡信息 -->
+    <update id="updateLevel" parameterType="com.tagtax.entity.Level">
+        UPDATE levels SET 
+        level_name = #{levelName},
+        level_number = #{levelNumber},
+        description = #{description},
+        required_goals = #{requiredGoals},
+        unlock_condition = #{unlockCondition},
+        max_stars = #{maxStars},
+        is_active = #{isActive}
+        WHERE id = #{id}
+    </update>
+    
+    <!-- 删除关卡 -->
+    <delete id="deleteLevel">
+        DELETE FROM levels WHERE id = #{levelId}
+    </delete>
+    
+</mapper>
