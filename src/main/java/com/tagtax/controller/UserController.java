@@ -55,11 +55,4 @@ public class UserController {
         }
         return Result.success(userMapper.queryUserById(userId));
     }
-
-
-
-
-
-
-
 }

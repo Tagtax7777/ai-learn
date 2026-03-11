@@ -16,7 +16,7 @@
         </foreach>
     </insert>
 
-    <insert id="addTasks" parameterType="java.util.List">
+    <insert id="addTasks" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="id">
         insert into goal_tasks
         (goal_id, title, sort_order, estimated_hours, actual_hours, status)
         values
@@ -30,8 +30,45 @@
         select * from learning_goals where user_id = #{userId}
     </select>
 
-    <select id="getTasksByGoalId" resultType="com.tagtax.entity.GoalTasks">
-        select * from goal_tasks where goal_id = #{goalId}
+    <resultMap id="tasksWithCardsMap" type="com.tagtax.entity.GoalTasks">
+        <id property="id" column="task_id"/>
+        <result property="goalId" column="goal_id"/>
+        <result property="title" column="title"/>
+        <result property="sortOrder" column="sort_order"/>
+        <result property="estimatedHours" column="estimated_hours"/>
+        <result property="actualHours" column="actual_hours"/>
+        <result property="status" column="status"/>
+        <collection property="knowledgeCards" ofType="com.tagtax.entity.KnowledgeCard">
+            <id property="id" column="card_id"/>
+            <result property="taskId" column="card_task_id"/>
+            <result property="cardName" column="card_name"/>
+            <result property="explanation" column="explanation"/>
+            <result property="example" column="example"/>
+            <result property="createdAt" column="created_at"/>
+            <result property="updatedAt" column="updated_at"/>
+        </collection>
+    </resultMap>
+
+    <select id="getTasksByGoalId" resultMap="tasksWithCardsMap">
+        SELECT
+            t.id AS task_id,
+            t.goal_id,
+            t.title,
+            t.sort_order,
+            t.estimated_hours,
+            t.actual_hours,
+            t.status,
+            c.id AS card_id,
+            c.task_id AS card_task_id,
+            c.card_name,
+            c.explanation,
+            c.example,
+            c.created_at,
+            c.updated_at
+        FROM goal_tasks t
+        LEFT JOIN knowledge_cards c ON t.id = c.task_id
+        WHERE t.goal_id = #{goalId}
+        ORDER BY t.sort_order ASC, c.id ASC
     </select>
 
     <select id="getGoalByGoalId" resultType="com.tagtax.entity.LearningGoals">

@@ -1,4 +1,4 @@
-package com.tagtax.entity;
+package com.tagtax.entity.dto.entity;
 
 import lombok.Data;
 
@@ -9,6 +9,4 @@ public class Badge {
     private String badgeImage;
     private String badgeImageLocked;
     private Integer requiredPoints;
-
-
 }

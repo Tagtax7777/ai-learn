@@ -1,8 +1,9 @@
-package com.tagtax.entity;
+package com.tagtax.entity.dto.entity;
 
-import lombok.*;
-import java.time.LocalDateTime;
-import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
@@ -16,6 +17,4 @@ public class GoalTasks {
     private Double estimatedHours;  // 预计耗时（小时）
     private Double actualHours;     // 实际耗时（小时）
     private Integer status;            // 0=待办 1=进行中 2=完成 3=跳过
-
-    private List<KnowledgeCard> knowledgeCards;  // 关联的知识卡片列表（非数据库字段）
 }

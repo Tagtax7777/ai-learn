@@ -54,6 +54,14 @@ public class LevelServiceImpl implements LevelService {
             // 生成8关的关卡信息
             List<Level> levels = new ArrayList<>();
             for (int i = 1; i <= MAX_LEVELS; i++) {
+                // 获取用户今日在该关卡的星星数
+                Integer starsEarned = 0;
+                String dailyRecordKey = "daily:record:" + userId + ":" + today + ":" + i;
+                Object dailyStarsObj = redisTemplate.opsForValue().get(dailyRecordKey);
+                if (dailyStarsObj != null) {
+                    starsEarned = (Integer) dailyStarsObj;
+                }
+                
                 Level level = Level.builder()
                         .id((long) i)
                         .levelName("第" + i + "关")
@@ -61,6 +69,7 @@ public class LevelServiceImpl implements LevelService {
                         .description(getDifficultyDescription(i))
                         .maxStars(3)
                         .isActive(i <= currentLevel ? 1 : 0) // 只有当前关卡及之前的关卡可用
+                        .starsEarned(starsEarned) // 添加用户今日已获得的星星数
                         .build();
                 levels.add(level);
             }
@@ -277,7 +286,7 @@ public class LevelServiceImpl implements LevelService {
             String analysisPrompt = "用户在第" + levelId + "关中答对了" + correctCount + "/" + totalQuestions + 
                                   "道题，正确率为" + String.format("%.1f", accuracy * 100) + "%。" +
                                   (wrongTopics.isEmpty() ? "全部答对！" : "错误涉及知识点: " + String.join(", ", wrongTopics)) +
-                                  "请分析用户的学习质量并给出具体的学习建议。";
+                                  "请分析用户的学习质量并给出具体的学习建议(学习建议在100字以内，不需要空格与换行)";
             
             ChatClient chatClient = ChatClient.create(zhiPuAiChatModel);
             String analysis = chatClient.prompt(analysisPrompt).call().content();
@@ -293,6 +302,10 @@ public class LevelServiceImpl implements LevelService {
                     .qualityAnalysis(analysis)
                     .completedAt(LocalDateTime.now())
                     .build();
+                    
+            // 保存今日关卡星星数据到Redis
+            String dailyRecordKey = "daily:record:" + userId + ":" + today + ":" + levelId;
+            redisTemplate.opsForValue().set(dailyRecordKey, stars, getSecondsUntilEndOfDay(), TimeUnit.SECONDS);
             
             if (levelMapper.saveUserLevelRecord(record) > 0) {
                 // 如果通过当前关卡，解锁下一关

@@ -3,6 +3,7 @@ package com.tagtax.service.serviceImpl;
 import com.tagtax.entity.*;
 import com.tagtax.mapper.BadgeMapper;
 import com.tagtax.mapper.GoalsMapper;
+import com.tagtax.mapper.KnowledgeCardMapper;
 import com.tagtax.mapper.StudyRecordMapper;
 import com.tagtax.mapper.StudyTimeMapper;
 import com.tagtax.service.GoalsService;
@@ -38,6 +39,9 @@ public class GoalsServiceImpl implements GoalsService {
     @Autowired
     private StudyRecordMapper studyRecordMapper;
 
+    @Autowired
+    private KnowledgeCardMapper knowledgeCardMapper;
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Result createGoalsByAi(String userScanInput, Long userId) {
@@ -52,11 +56,14 @@ public class GoalsServiceImpl implements GoalsService {
         String dateString=dateFormat.format(date);
         System.out.println(dateString);
 
-        String aiPrompt = "请分析以下内容并返回学习目标和目标下面的任务，" +
+        String aiPrompt = "请分析以下内容并返回学习目标、目标下面的任务，以及每个任务的知识卡片（5-8张），" +
                 "并且严格填充对应的userId(" + userId +
                 "),标题，目标type(1考试，2技能，3课程)，开始日期（" + dateString +
                 ")，结束日期（根据提供的开始日期进行填写），" +
-                "状态（0进行中，1已完成），耗费时间（小时）,sortOrder(执行顺序)等信息" + safeInput;
+                "状态（0进行中，1已完成），耗费时间（小时）,sortOrder(执行顺序)等信息。" +
+                "每个任务需要包含knowledgeCards字段，是一个数组，包含5-8张知识卡片，" +
+                "每张卡片包含cardName（知识卡片名称）、explanation（知识解释）、example（举例说明）。" +
+                "内容：" + safeInput;
         List<LearningGoals> goals = chatClient.prompt(aiPrompt)
                 .call()
                 .entity(new ParameterizedTypeReference<>() {});
@@ -71,6 +78,17 @@ public class GoalsServiceImpl implements GoalsService {
                     goalTask.setGoalId(goalId);
                 }
                 if(goalsMapper.addTasks(goalTasks) > 0){
+                    // 保存每个任务的知识卡片到数据库
+                    for(GoalTasks task : goalTasks){
+                        List<KnowledgeCard> cards = task.getKnowledgeCards();
+                        if(cards != null && !cards.isEmpty()){
+                            // 为每张卡片设置taskId
+                            for(KnowledgeCard card : cards){
+                                card.setTaskId(task.getId());
+                            }
+                            knowledgeCardMapper.batchCreateCards(cards);
+                        }
+                    }
                     return Result.success(goals);
                 }else {
                     return Result.error("生成失败，请重试");
@@ -104,16 +122,27 @@ public class GoalsServiceImpl implements GoalsService {
     }
 
     @Override
-    public Flux<String> talkToAi(String text) {
+    public Flux<String> talkToAi(String text, Integer mode) {
         ChatClient chatClient = ChatClient.create(zhiPuAiChatModel);
 
-        String aiPrompt = "你是一个语气活泼开朗的学习规划助手，会为用户提供学习规划建议，" +
-                "下面是用户的学习规划，请给出100字左右的建议:" + text;
-        Flux<String> res = chatClient.prompt(aiPrompt)
-                .stream()
-                .content();
+        String aiPrompt1 = "你是一个语气活泼开朗的学习规划助手，会用哦，呀等语气词，会为用户提供学习规划建议，" +
+                "下面是用户的学习规划，请给出120字左右的建议，并且给出的建议只有文字和标点符号，不要有emoji或者其他表情符号:" + text;
 
-        return res;
+        String aiPrompt2 = "你是一个语气活泼开朗的学习规划助手，会用哦，呀等语气词，会为用户提供学习规划建议，" +
+                "下面是用户的学习规划，请给出120字左右的建议，并且给出的建议会用emoji或者其他表情符号:" + text;
+//        String aiPrompt = "你是一个智能翻译助手，能把英文翻译成中文, 下面是英文原文"+ text;
+        if(mode==0){
+            Flux<String> res = chatClient.prompt(aiPrompt1)
+                    .stream()
+                    .content();
+            return res;
+        }else if(mode==1){
+            Flux<String> res = chatClient.prompt(aiPrompt2)
+                    .stream()
+                    .content();
+            return res;
+        }
+        return null;
     }
 
 

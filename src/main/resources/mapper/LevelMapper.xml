@@ -27,7 +27,7 @@
         INSERT INTO user_level_records 
         (user_id, level_id, stars_earned, score, total_questions, correct_answers, completion_time, quality_analysis, completed_at)
         VALUES 
-        (#{userId}, #{levelId}, #{starsEarned}, #{score}, #{totalQuestions}, #{correctAnswers}, #{completionTime}, #{qualityAnalysis}, #{completedAt})
+        (#{userId}, #{levelId}, #{starsEarned}, #{score}, #{totalQuestions}, #{correctAnswers}, #{completionTime}, #{qualityAnalysis}, now())
     </insert>
     
     <!-- 获取用户关卡历史记录 -->

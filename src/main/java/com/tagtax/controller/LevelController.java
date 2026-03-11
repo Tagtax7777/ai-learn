@@ -10,6 +10,7 @@ import com.tagtax.mapper.LevelMapper;
 import com.tagtax.service.LevelService;
 import com.tagtax.utils.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,6 +25,9 @@ public class LevelController {
 
     @Autowired
     private LevelMapper  levelMapper;
+    
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
     
     /**
      * 获取用户可用关卡列表
@@ -116,5 +120,31 @@ public class LevelController {
         }
         Long userId = JwtUtil.getIdFromToken(token);
         return levelService.getUserDailyStats(userId);
+    }
+    
+    /**
+     * 清除Redis缓存中的关卡数据
+     */
+    @DeleteMapping("/clearCache")
+    public Result clearCache(@RequestHeader("Authorization") String token) {
+        // 验证JWT令牌
+        if (!JwtUtil.validateToken(token.replace("Bearer ", ""))) {
+            return Result.error("无效的令牌");
+        }
+        Long userId = JwtUtil.getIdFromToken(token);
+        
+        // 清除用户的关卡题目缓存
+        String questionsKeyPattern = "daily:questions:" + userId + ":*";
+        redisTemplate.keys(questionsKeyPattern).forEach(key -> {
+            redisTemplate.delete(key);
+        });
+        
+        // 清除用户的关卡进度缓存
+        String progressKeyPattern = "daily:progress:" + userId + ":*";
+        redisTemplate.keys(progressKeyPattern).forEach(key -> {
+            redisTemplate.delete(key);
+        });
+        
+        return Result.success("关卡缓存已清除");
     }
 }

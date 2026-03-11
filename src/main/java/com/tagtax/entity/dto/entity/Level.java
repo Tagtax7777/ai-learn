@@ -1,6 +1,10 @@
-package com.tagtax.entity;
+package com.tagtax.entity.dto.entity;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
 
 @Data

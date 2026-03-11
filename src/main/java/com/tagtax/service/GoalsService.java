@@ -14,7 +14,7 @@ public interface GoalsService {
     Result learnTask(Long userId, Long goalId, Long taskId, Double hours,
                      LocalTime startTime, LocalTime endTime, LocalDate timingDate);
 
-    Flux<String> talkToAi(String text);
+    Flux<String> talkToAi(String text, Integer mode);
 
     Result cleanDataByAi(String userScanInput, Long userId);
 }

@@ -17,9 +17,11 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.Month;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Service
@@ -303,7 +305,7 @@ public class AIReportServiceImpl implements AIReportService {
             Double hours = entry.getValue();
             
             // 将小时转换为整数值（可以是百分比或实际小时数的某种表示）
-            int value = (int) (hours * 10); // 简单地将小时数乘以10作为值
+            int value = (int) (hours * 2); // 简单地将小时数乘以10作为值
             
             timeItems.add(AIReport.TimeDistribution.TimeItem.builder()
                     .name(knowledgePoint)
@@ -485,6 +487,13 @@ public class AIReportServiceImpl implements AIReportService {
     private AIReport.RecommendedLearning generateRecommendedLearning(List<LearningGoals> learningGoals, List<StudyRecord> studyRecords) {
         List<AIReport.RecommendedLearning.RecommendItem> recommendItems = new ArrayList<>();
         
+        // 用于过滤占位符项目的辅助方法
+        Predicate<String> isPlaceholder = name -> {
+            return name.matches("\\d+\\.\\s*名称.*") || 
+                   name.contains("名称") || 
+                   name.matches("\\d+\\..*") && name.length() < 10;
+        };
+        
         try {
             // 1. 分析未完成的学习目标
             List<LearningGoals> incompleteGoals = learningGoals.stream()
@@ -507,8 +516,7 @@ public class AIReportServiceImpl implements AIReportService {
             // 3. 使用AI生成个性化推荐
             if (!incompleteGoals.isEmpty()) {
                 StringBuilder prompt = new StringBuilder();
-                prompt.append("请根据以下未完成的学习目标，生成2个具体的学习推荐，每个推荐必须包含实际课程或学习资源的名称、建议学习时间(小时)和具体学习重点。格式为：课程名称|时间|学习重点\n");
-                prompt.append("注意：\n1. 不要使用占位符或序号（如'1. 名称'）\n2. 直接给出具体的课程或资源名称\n3. 推荐应该与用户的学习目标直接相关\n4. 时间应该是合理的小时数\n5. 学习重点应该具体且有指导性\n\n");
+                prompt.append("请根据以下未完成的学习目标，生成2个学习推荐，包括名称、建议学习时间(小时)和学习重点。格式为：名称|时间|学习重点\n");
                 
                 // 添加未完成目标信息
                 prompt.append("未完成的学习目标：\n");
@@ -531,8 +539,6 @@ public class AIReportServiceImpl implements AIReportService {
                     }
                 }
                 
-                prompt.append("\n示例格式（仅供参考）：\n新东方英语四级强化班|60|重点学习听力、阅读理解技巧和写作策略，以及词汇积累。\nCoursera - Python数据分析专项课程|40|深入学习Pandas、NumPy等库的使用，以及数据清洗、分析和可视化的实践操作。");
-                
                 ChatClient chatClient = ChatClient.create(zhiPuAiChatModel);
                 String response = chatClient.prompt(prompt.toString()).call().content();
                 
@@ -543,11 +549,10 @@ public class AIReportServiceImpl implements AIReportService {
                         String[] parts = line.split("\\|");
                         if (parts.length >= 3) {
                             String name = parts[0].trim();
-                            // 跳过带有占位符格式的项目（如"1. 名称"、"2. 名称"等）
-                            if (name.matches("\\d+\\.\\s*名称.*") || name.contains("名称")) {
+                            // 跳过带有占位符格式的项目
+                            if (isPlaceholder.test(name)) {
                                 continue;
                             }
-                            
                             int time;
                             try {
                                 time = Integer.parseInt(parts[1].trim());
@@ -576,15 +581,25 @@ public class AIReportServiceImpl implements AIReportService {
                 });
                 
                 // 添加推荐
-                for (int i = 0; i < Math.min(2 - recommendItems.size(), incompleteGoals.size()); i++) {
+                int added = 0;
+                for (int i = 0; i < incompleteGoals.size() && added < (2 - recommendItems.size()); i++) {
                     LearningGoals goal = incompleteGoals.get(i);
+                    String title = goal.getTitle();
+                    
+                    // 跳过带有占位符格式的标题
+                    if (isPlaceholder.test(title)) {
+                        continue;
+                    }
+                    
                     int recommendedTime = goal.getEstimatedHours() != null ? goal.getEstimatedHours().intValue() : 5;
                     
                     recommendItems.add(AIReport.RecommendedLearning.RecommendItem.builder()
-                            .name(goal.getTitle())
+                            .name(title)
                             .time(recommendedTime)
                             .remainder("专注完成这个学习目标，按计划进行")
                             .build());
+                    
+                    added++;
                 }
             }
         } catch (Exception e) {
@@ -596,27 +611,46 @@ public class AIReportServiceImpl implements AIReportService {
                         .collect(Collectors.toList());
                 
                 if (!incompleteGoals.isEmpty()) {
-                    // 取前两个未完成的目标
-                    for (int i = 0; i < Math.min(2, incompleteGoals.size()); i++) {
+                    // 取未完成的目标
+                    int added = 0;
+                    for (int i = 0; i < incompleteGoals.size() && added < 2; i++) {
                         LearningGoals goal = incompleteGoals.get(i);
+                        String title = goal.getTitle();
+                        
+                        // 跳过带有占位符格式的标题
+                        if (isPlaceholder.test(title)) {
+                            continue;
+                        }
+                        
                         int recommendedTime = goal.getEstimatedHours() != null ? goal.getEstimatedHours().intValue() : 5;
                         
                         recommendItems.add(AIReport.RecommendedLearning.RecommendItem.builder()
-                                .name(goal.getTitle())
+                                .name(title)
                                 .time(recommendedTime)
                                 .remainder("建议按计划完成学习目标")
                                 .build());
+                        
+                        added++;
                     }
                 } else {
                     // 如果没有未完成的目标，推荐复习已完成的目标
-                    for (int i = 0; i < Math.min(2, learningGoals.size()); i++) {
+                    int added = 0;
+                    for (int i = 0; i < learningGoals.size() && added < 2; i++) {
                         LearningGoals goal = learningGoals.get(i);
+                        String title = goal.getTitle();
+                        
+                        // 跳过带有占位符格式的标题
+                        if (isPlaceholder.test(title)) {
+                            continue;
+                        }
                         
                         recommendItems.add(AIReport.RecommendedLearning.RecommendItem.builder()
-                                .name(goal.getTitle() + "(复习)")
+                                .name(title + "(复习)")
                                 .time(3)
                                 .remainder("建议复习巩固已学内容")
                                 .build());
+                        
+                        added++;
                     }
                 }
             }
@@ -699,7 +733,7 @@ public class AIReportServiceImpl implements AIReportService {
             return suggestion;
         } catch (Exception e) {
             // 如果AI生成失败，返回默认建议
-            return "你在09:00 - 10:30学习高数时，专注度比平均值高20%。胜利就在前方！";
+            return "你在09:00 - 10:30学习高数时，专注度比平均值高20%。今日已完成4项任务，还有3项待完成，胜利就在前方！";
         }
     }
     

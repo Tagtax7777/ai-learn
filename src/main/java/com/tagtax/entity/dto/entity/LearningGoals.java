@@ -1,6 +1,10 @@
-package com.tagtax.entity;
+package com.tagtax.entity.dto.entity;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,5 +26,4 @@ public class LearningGoals {
     private Double actualHours;        // 实际总耗时(小时)
 
     private List<GoalTasks> goalTasks; // 非数据库字段，用来进行业务处理
-
 }

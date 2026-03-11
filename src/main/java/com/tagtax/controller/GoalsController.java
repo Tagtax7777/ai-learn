@@ -49,9 +49,10 @@ public class GoalsController {
 
 
     @GetMapping(value = "/talkToAi", produces = "text/html;charset=utf-8")
-    public Flux<String> talkToAi(String text) {
-        return goalsService.talkToAi(text);
+    public Flux<String> talkToAi(@RequestParam("text") String text, @RequestParam("mode") Integer mode) {
+        return goalsService.talkToAi(text, mode);
     }
+
 
 
 
