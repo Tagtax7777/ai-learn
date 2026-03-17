@@ -14,8 +14,8 @@ public class JwtUtil {
     private static final String SECRET = "mySecretKeyForJWTTokenGenerationAndValidation123456789";
     private static final SecretKey KEY = Keys.hmacShaKeyFor(SECRET.getBytes());
 
-    // Token过期时间（24小时）
-    private static final long EXPIRATION_TIME = 24 * 60 * 60 * 1000;
+    // Token过期时间（24小时 * 7）ps:临时改为一周用于调试
+    private static final long EXPIRATION_TIME = 24 * 60 * 60 * 1000 * 7;
 
     /**
      * 生成JWT Token

@@ -6,7 +6,7 @@ spring:
     password: 123456
   ai:
     zhipuai:
-      api-key: 0fb39d28435242f8869e81949c4d9d8c.zFVZAVU5ZXzX1J11
+      api-key: ${ZHIPU_API_KEY}
       chat:
         options:
           model: glm-4.7

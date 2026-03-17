@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tagtax.mapper.WheelMapper" >
+
+    <insert id="addRewards">
+        insert into user_rewards(user_id, reward_type, reward_name) value (#{userId}, #{rewardType}, #{rewardName})
+    </insert>
+</mapper>
