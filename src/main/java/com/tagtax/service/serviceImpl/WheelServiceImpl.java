@@ -43,22 +43,23 @@ public class WheelServiceImpl implements WheelService {
             goalNames = goalNames + goal.getTitle() + ", ";
         }
         System.out.println(goalNames);
-        String aiPrompt = "请根据这些学习目标:" + goalNames + "生成题目，你是一个专业的教育出题专家。请根据以下条件，生成一道内容简洁的单道测试题。\n" +
-                "\n" +
+        String aiPrompt = "你是一个专业的教育出题专家。请从以下学习目标中随机选择一个：[" + goalNames + "]，生成一道内容简洁的测试题。\n\n" +
                 "出题条件：\n" +
-                "- 知识领域：{前面学习目标中随机选一个}\n" +
-                "- 难度等级：{ " + difficultyLevel + "} (1-9级，数字越大越难。8-9级必须是非常刁钻的底层原理或复杂应用)\n" +
-                "- 题型：随机选择一种（1-单选, 2-判断, 3-填空）\n" +
-                "\n" +
-                "绝对要求：\n" +
-                "不要包含任何 Markdown 标记（如 ```json），不要有任何前言后语和解释。结构必须严格如下：\n" +
+                "- 难度等级：" + difficultyLevel + " (1-9级，数字越大越难。8-9级必须是非常刁钻的底层原理或复杂应用)\n" +
+                "- 题型：随机选择一种（1-单选, 2-判断, 3-填空）\n\n" +
+                "绝对要求（非常重要）：\n" +
+                "1. 必须且只能输出一个纯合法的 JSON 对象，绝对不要包含任何 Markdown 标记（如 ```json），也不要有任何前言后语！\n" +
+                "2. questionText 字段：如果是填空题，填空处必须使用 HTML 标签，例如：\"It is a red <input type='text' class='wheel-input' /> (苹果) .\"；如果是其他题型，正常输出纯文本。\n" +
+                "3. options 字段：单选题输出字符串数组，如 [\"A. xx\", \"B. xx\", \"C. xx\", \"D. xx\"]；判断题严格输出 [\"正确\", \"错误\"]；填空题严格输出 null。\n" +
+                "4. correctAnswer 字段：单选题输出字母（如 \"A\"），判断题输出 \"正确\" 或 \"错误\"，填空题输出确切的填空词。\n\n" +
+                "5. 除了自然语言类（英语，日语）相关的目标生成的题目，其他知识类题目用中文题干" +
+                "请严格参考以下 JSON 结构模板进行输出（只需替换值为你生成的内容）：\n" +
                 "{\n" +
-                "  \"id\": 1001, \n" +
-                "  \"difficultyLevel\": 8,\n" +
-                "  \"questionType\": 1, \n" +
-                "  \"questionText\": \"题目正文\",\n" +
-                "  \"options\": 选择题[\"A. xx\", \"B. xx\", \"C. xx\", \"D. xx\"], // 如果是判断题则为 [\"正确\", \"错误\"]，如果是填空题则严格输出 null\n" +
-                "  \"correctAnswer\": \"选择题则是前面的字母，判断题则是正确或错误，填空题则是填空词\"\n" +
+                "  \"difficultyLevel\": " + difficultyLevel + ",\n" +
+                "  \"questionType\": 1,\n" +
+                "  \"questionText\": \"这里是题目正文\",\n" +
+                "  \"options\": [\"A. 选项1\", \"B. 选项2\", \"C. 选项3\", \"D. 选项4\"],\n" +
+                "  \"correctAnswer\": \"A\"\n" +
                 "}";
 
         WheelQuestionRequest wheelQuestionRequest = chatClient.prompt(aiPrompt)

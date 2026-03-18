@@ -14,7 +14,7 @@ public class WheelQuestionRequest {
      * 难度等级
      * 对应转盘上抽中的数字，范围通常为 1-9。数字越大，AI 生成的题目越难。
      */
-    private String difficultyLevel;
+    private Integer difficultyLevel;
 
     /**
      * 题目类型
