@@ -62,8 +62,9 @@ public class GoalsServiceImpl implements GoalsService {
                 ")，结束日期（根据提供的开始日期进行填写），" +
                 "状态（0进行中，1已完成），耗费时间（小时）,sortOrder(执行顺序)等信息。" +
                 "每个任务需要包含knowledgeCards字段，是一个数组，包含5-8张知识卡片，" +
-                "每张卡片包含cardName（知识卡片名称）、explanation（知识解释）、example（举例说明）。" +
-                "内容：" + safeInput;
+                "每张卡片包含cardName（知识卡片名称）、explanation（知识解释）、example（举例说明）。\n" +
+                "内容：" + safeInput + "\n\n" +
+                "【强制格式要求】：请务必返回一个标准的 JSON 数组。即使只有一个学习目标，最外层也必须用中括号 [] 包裹。绝对不要返回以大括号 {} 开头的单个对象！";
         List<LearningGoals> goals = chatClient.prompt(aiPrompt)
                 .call()
                 .entity(new ParameterizedTypeReference<>() {});
